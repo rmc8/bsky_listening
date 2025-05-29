@@ -9,7 +9,7 @@ import pandas as pd
 from dotenv import load_dotenv
 
 
-from libs import bsky, preproc, embedding, clustering
+from libs import bsky, preproc, embedding, clustering, labeling
 from libs.file_name import FileName
 
 load_dotenv()
@@ -93,6 +93,23 @@ class BskyListening:
         )
         output_path = io_dir.joinpath(FileName.clustering.value)
         odf.to_csv(output_path, sep="\t", index=False)
+
+    @staticmethod
+    def labeling(pj_name: str = pj_name):
+        io_dir = PROJECT_DIR.joinpath(pj_name)
+        clustering_path = io_dir.joinpath(FileName.clustering.value)
+        preproc_path = io_dir.joinpath(FileName.preproc.value)
+        pdf = pd.read_csv(preproc_path, sep="\t")
+        cdf = pd.read_csv(clustering_path, sep="\t")
+        idf = pd.merge(pdf, cdf, on=["index"], how="left")
+        odf = labeling.labeling(
+            config=get_config(),
+            api_key=str(os.getenv("XAI_API_KEY")),
+            idf=idf,
+        )
+        output_path = io_dir.joinpath(FileName.labeling.value)
+        odf.to_csv(output_path, sep="\t", index=False)
+
 
 def main():
     fire.Fire(BskyListening)

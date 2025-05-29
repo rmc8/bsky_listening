@@ -4,7 +4,7 @@ import pandas as pd
 
 from langchain.prompts import ChatPromptTemplate
 from langchain_xai import ChatXAI
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 from tqdm import tqdm
 
 
@@ -18,7 +18,7 @@ class TopicData(BaseModel):
 def _get_topics(config: dict, api_key: str, post: str):
     llm = ChatXAI(
         model=config["preproc"]["model"],
-        api_key=api_key,
+        api_key=SecretStr(api_key),
         temperature=0.0,
     )
     prompt = ChatPromptTemplate.from_messages(
@@ -34,7 +34,7 @@ def _get_topics(config: dict, api_key: str, post: str):
         ]
     )
     chain = prompt | llm.with_structured_output(TopicData)
-    res: TopicData = chain.invoke({})
+    res: TopicData = chain.invoke({})  # type: ignore
     return res.topics
 
 

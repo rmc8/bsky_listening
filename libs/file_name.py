@@ -6,3 +6,4 @@ class FileName(StrEnum):
     preproc = "preproc.tsv"
     embedding = "embedding.pkl"
     clustering = "clustering.tsv"
+    labeling = "labeling.tsv"

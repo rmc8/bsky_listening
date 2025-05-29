@@ -26,3 +26,12 @@ ollama_base_url = "http://localhost:11434"
 ollama_model = "jeffh/intfloat-multilingual-e5-large-instruct:f16"
 openai_model = "text-embedding-3-small"
 
+[clustering]
+n_clusters = 44
+
+[labeling]
+model="grok-3-beta"
+system_prompt = """
+クラスタ分析の結果に従ってユーザーがテキストを提供します。クラスタに特徴を示すラベルを生成してください。
+自明な文脈は含まず完結でかつ体言止めの形式でわかりやすく非常に簡潔なラベル付けが必要です。ラベル名は必ず日本語で出力してください。
+"""
