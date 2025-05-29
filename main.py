@@ -9,7 +9,7 @@ import pandas as pd
 from dotenv import load_dotenv
 
 
-from libs import bsky, preproc, embedding
+from libs import bsky, preproc, embedding, clustering
 from libs.file_name import FileName
 
 load_dotenv()
@@ -32,7 +32,7 @@ class BskyListening:
     @staticmethod
     def fetch(pj_name: str = pj_name, limit: int = 500):
         df = bsky.fetch(
-            config=get_config(), app_pass=os.getenv("BSKY_APP_PASS"), limit=limit
+            config=get_config(), app_pass=str(os.getenv("BSKY_APP_PASS")), limit=limit
         )
         io_dir = PROJECT_DIR.joinpath(pj_name)
         os.makedirs(io_dir, exist_ok=True)
@@ -46,7 +46,7 @@ class BskyListening:
         idf = pd.read_csv(input_path, sep="\t")
         odf = preproc.preproc(
             config=get_config(),
-            api_key=os.getenv("XAI_API_KEY"),
+            api_key=str(os.getenv("XAI_API_KEY")),
             idf=idf,
         )
         output_path = io_dir.joinpath(FileName.preproc.value)
@@ -56,7 +56,7 @@ class BskyListening:
     def _embedding_by_openai(idf: pd.DataFrame) -> pd.DataFrame:
         return embedding.embed_by_openai(
             config=get_config(),
-            api_key=os.getenv("OPENAI_API_KEY"),
+            api_key=str(os.getenv("OPENAI_API_KEY")),
             idf=idf,
         )
 
@@ -77,8 +77,22 @@ class BskyListening:
         )
         odf = embedding_func(idf)
         output_path = io_dir.joinpath(FileName.embedding.value)
-        odf.to_csv(output_path, sep="\t", index=False)
+        odf.to_pickle(output_path)
 
+    @staticmethod
+    def clustering(pj_name: str = pj_name):
+        io_dir = PROJECT_DIR.joinpath(pj_name)
+        preproc_path = io_dir.joinpath(FileName.preproc.value)
+        embedding_path = io_dir.joinpath(FileName.embedding.value)
+        idf = pd.read_csv(preproc_path, sep="\t")
+        edf = pd.read_pickle(embedding_path)
+        odf = clustering.clustering(
+            config=get_config(),
+            idf=idf,
+            edf=edf,
+        )
+        output_path = io_dir.joinpath(FileName.clustering.value)
+        odf.to_csv(output_path, sep="\t", index=False)
 
 def main():
     fire.Fire(BskyListening)

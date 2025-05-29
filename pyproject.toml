@@ -6,7 +6,10 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "atproto>=0.0.61",
+    "bertopic>=0.17.0",
     "fire>=0.7.0",
+    "hdbscan>=0.8.40",
+    "janome>=0.5.0",
     "langchain>=0.3.25",
     "langchain-ollama>=0.3.3",
     "langchain-openai>=0.3.18",
@@ -16,9 +19,23 @@ dependencies = [
     "python-dotenv>=1.1.0",
     "retry>=0.9.2",
     "tqdm>=4.67.1",
+    "umap>=0.1.1",
 ]
 
 [dependency-groups]
 dev = [
+    "pandas-stubs>=2.2.3.250527",
     "ruff>=0.11.11",
 ]
+
+
+[[tool.mypy.overrides]]
+module = [
+    'janome/*',
+    'umap/*',
+    'hdbscan/*',
+    'sklearn/*',
+    'bertopic/*',
+    'fire/*',
+]
+ignore_missing_imports = true

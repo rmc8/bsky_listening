@@ -1,7 +1,8 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class FileName(Enum):
-    bsky_posts: str = "bsky_posts.tsv"
-    preproc: str = "preproc.tsv"
-    embedding: str = "embedding.tsv"
+class FileName(StrEnum):
+    bsky_posts = "bsky_posts.tsv"
+    preproc = "preproc.tsv"
+    embedding = "embedding.pkl"
+    clustering = "clustering.tsv"
