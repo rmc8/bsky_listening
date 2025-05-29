@@ -122,6 +122,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "retry" },
+    { name = "tqdm" },
 ]
 
 [package.dev-dependencies]
@@ -141,6 +142,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.11.5" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "retry", specifier = ">=0.9.2" },
+    { name = "tqdm", specifier = ">=4.67.1" },
 ]
 
 [package.metadata.requires-dev]

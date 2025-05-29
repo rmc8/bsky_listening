@@ -7,16 +7,18 @@ from atproto import Client
 from pandas import DataFrame
 from retry import retry
 
-logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger(__name__)
 
+
 @retry(tries=5, delay=6.0)
-def _get_timeline(c:Client , actor:str, cursor: str | None):
+def _get_timeline(c: Client, actor: str, cursor: str | None):
     res = c.get_author_feed(actor=actor, cursor=cursor, limit=100)
     return res
 
 
 def fetch(config: dict[str, Any], app_pass: str, limit: int) -> DataFrame:
+    logging.basicConfig(level=logging.INFO)
     handle = config["bluesky"]["handle"]
     c = Client()
     c.login(login=handle, password=app_pass)

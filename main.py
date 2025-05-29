@@ -5,11 +5,11 @@ from pathlib import Path
 from typing import Any
 
 import fire
-# import pandas as pd
+import pandas as pd
 from dotenv import load_dotenv
 
 
-from libs import bsky
+from libs import bsky, preproc
 from libs.file_name import FileName
 
 load_dotenv()
@@ -34,11 +34,23 @@ class BskyListening:
         df = bsky.fetch(
             config=get_config(), app_pass=os.getenv("BSKY_APP_PASS"), limit=limit
         )
-        output_dir = PROJECT_DIR.joinpath(pj_name)
-        os.makedirs(output_dir, exist_ok=True)
-        output_path = output_dir.joinpath(FileName.bsky_posts.value)
+        io_dir = PROJECT_DIR.joinpath(pj_name)
+        os.makedirs(io_dir, exist_ok=True)
+        output_path = io_dir.joinpath(FileName.bsky_posts.value)
         df.to_csv(output_path, sep="\t", index=False)
 
+    @staticmethod
+    def preproc(pj_name: str = pj_name):
+        io_dir = PROJECT_DIR.joinpath(pj_name)
+        input_path = io_dir.joinpath(FileName.bsky_posts.value)
+        idf = pd.read_csv(input_path, sep="\t")
+        odf = preproc.preproc(
+            config=get_config(),
+            api_key=os.getenv("XAI_API_KEY"),
+            idf=idf,
+        )
+        output_path = io_dir.joinpath(FileName.preproc.value)
+        odf.to_csv(output_path, sep="\t", index=False)
 
 
 def main():
