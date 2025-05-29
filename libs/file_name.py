@@ -7,3 +7,4 @@ class FileName(StrEnum):
     embedding = "embedding.pkl"
     clustering = "clustering.tsv"
     labeling = "labeling.tsv"
+    chart = "chart.html"

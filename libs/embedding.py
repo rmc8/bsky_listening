@@ -1,5 +1,3 @@
-from typing import Literal
-
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from pandas import DataFrame

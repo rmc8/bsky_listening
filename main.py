@@ -9,7 +9,7 @@ import pandas as pd
 from dotenv import load_dotenv
 
 
-from libs import bsky, preproc, embedding, clustering, labeling
+from libs import bsky, chart, preproc, embedding, clustering, labeling
 from libs.file_name import FileName
 
 load_dotenv()
@@ -109,6 +109,22 @@ class BskyListening:
         )
         output_path = io_dir.joinpath(FileName.labeling.value)
         odf.to_csv(output_path, sep="\t", index=False)
+
+    @staticmethod
+    def chart(pj_name: str = pj_name):
+        io_dir = PROJECT_DIR.joinpath(pj_name)
+        clustering_path = io_dir.joinpath(FileName.clustering.value)
+        preproc_path = io_dir.joinpath(FileName.preproc.value)
+        pdf = pd.read_csv(preproc_path, sep="\t")
+        pdf = pdf[~pdf["topic"].str.contains("朝活", na=False)]
+        cdf = pd.read_csv(clustering_path, sep="\t")
+        idf = pd.merge(pdf, cdf, on=["index"], how="left")
+        labeling_path = io_dir.joinpath(FileName.labeling.value)
+        ldf = pd.read_csv(labeling_path, sep="\t")
+        html = chart.chart(config=get_config(), pdf=idf, ldf=ldf)
+        output_path = io_dir.joinpath(FileName.chart.value)
+        with open(output_path, "w") as f:
+            f.write(html)
 
 
 def main():

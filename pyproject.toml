@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "atproto>=0.0.61",
     "bertopic>=0.17.0",
+    "dash[full]>=3.0.4",
     "fire>=0.7.0",
     "hdbscan>=0.8.40",
     "janome>=0.5.0",
@@ -37,5 +38,9 @@ module = [
     'sklearn/*',
     'bertopic/*',
     'fire/*',
+    "plotly/*",
+    "tqdm/*",
+    "atproto/*",
+    "retry/*",
 ]
 ignore_missing_imports = true
