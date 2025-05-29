@@ -9,7 +9,7 @@ import pandas as pd
 from dotenv import load_dotenv
 
 
-from libs import bsky, preproc
+from libs import bsky, preproc, embedding
 from libs.file_name import FileName
 
 load_dotenv()
@@ -50,6 +50,33 @@ class BskyListening:
             idf=idf,
         )
         output_path = io_dir.joinpath(FileName.preproc.value)
+        odf.to_csv(output_path, sep="\t", index=False)
+
+    @staticmethod
+    def _embedding_by_openai(idf: pd.DataFrame) -> pd.DataFrame:
+        return embedding.embed_by_openai(
+            config=get_config(),
+            api_key=os.getenv("OPENAI_API_KEY"),
+            idf=idf,
+        )
+
+    @staticmethod
+    def _embedding_by_ollama(idf: pd.DataFrame) -> pd.DataFrame:
+        return embedding.embed_by_ollama(
+            config=get_config(),
+            idf=idf,
+        )
+
+    @classmethod
+    def embedding(cls, pj_name: str = pj_name, is_local: bool = True):
+        io_dir = PROJECT_DIR.joinpath(pj_name)
+        input_path = io_dir.joinpath(FileName.preproc.value)
+        idf = pd.read_csv(input_path, sep="\t")
+        embedding_func = (
+            cls._embedding_by_ollama if is_local else cls._embedding_by_openai
+        )
+        odf = embedding_func(idf)
+        output_path = io_dir.joinpath(FileName.embedding.value)
         odf.to_csv(output_path, sep="\t", index=False)
 
 
