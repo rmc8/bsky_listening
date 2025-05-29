@@ -42,24 +42,41 @@
 クラスタリングされた各グループに対して、その特徴をもっともよく表すラベルを生成します。
 
 - **モジュール**: `libs/labeling.py`
-- **コマンド**: `python main.py labeling --pj_name [プロジェクト名]`
+- **コマンド**: `python main.py labeling --pj_name [プロジェクト名] --threshold [閾値]`
+  - `pj_name`: プロジェクト名（デフォルトは現在日付 `YYYYMMDD`）
+  - `threshold`: ラベル生成に使用するデータの確率閾値（デフォルトは0.70）。この値以上の確率を持つデータのみがラベル生成に使用されます。
 
 ### 6. チャート作成 (`chart`)
 
 クラスタリングとラベリングの結果を基に、インタラクティブな散布図（HTML形式）を生成します。
 
 - **モジュール**: `libs/chart.py`
-- **コマンド**: `python main.py chart --pj_name [プロジェクト名]`
+- **コマンド**: `python main.py chart --pj_name [プロジェクト名] --full_html [True/False]`
 
 ### 7. すべての処理を一括実行 (`all`)
 
 Blueskyの投稿取得からチャート作成までの一連の処理をすべて実行します。
 
 - **モジュール**: `main.py`
-- **コマンド**: `python main.py all --pj_name [プロジェクト名] --limit [取得件数] --is_local [True/False]`
+- **コマンド**: `python main.py all --pj_name [プロジェクト名] --limit [取得件数] --is_local [True/False] --threshold [閾値] --full_html [True/False]`
   - `pj_name`: プロジェクト名（デフォルトは現在日付 `YYYYMMDD`）
   - `limit`: 取得する投稿の最大件数（デフォルトは500）
   - `is_local`: 埋め込み生成でローカルのOllamaモデルを使用するかどうか（デフォルトはTrue）。Falseの場合、OpenAIモデルを使用します。
+  - `threshold`: ラベル生成に使用するデータの確率閾値（デフォルトは0.70）。この値以上の確率を持つデータのみがラベル生成に使用されます。
+  - `full_html`: チャートを完全なHTMLとして出力するかどうか（デフォルトはTrue）。
+
+## ビルド方法
+
+```bash
+git clone https://github.com/rmc8/bsky_listening.git 
+cd bsky_listening
+uv sync
+```
+
+```bash
+cp config.toml.example config.toml
+cp .env.example .env
+```
 
 ## 環境設定
 
@@ -111,28 +128,28 @@ OPENAI_API_KEY="your_openai_api_key"
 
 ```bash
 # 投稿の取得
-python main.py fetch --limit 1000
+uv run python main.py fetch --limit 1000
 
 # 投稿の前処理
-python main.py preproc
+uv run python main.py preproc
 
 # 埋め込み生成 (Ollamaを使用する場合)
-python main.py embedding --is_local True
+uv run python main.py embedding --is_local True
 
 # 埋め込み生成 (OpenAIを使用する場合)
-python main.py embedding --is_local False
+uv run python main.py embedding --is_local False
 
 # クラスタリング
-python main.py clustering
+uv run python main.py clustering
 
 # ラベリング
-python main.py labeling
+uv run python main.py labeling --threshold 0.75
 
 # チャート作成
-python main.py chart
+uv run python main.py chart --full_html True
 
 # 全ての処理を一括実行
-python main.py all --limit 1000 --is_local True
+uv run python main.py all --limit 1000 --is_local True --threshold 0.75 --full_html True
 ```
 
 各ステップは、前のステップが完了していることを前提としています。
