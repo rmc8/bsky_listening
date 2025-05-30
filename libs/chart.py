@@ -222,8 +222,8 @@ def _create_scatter_plot(
         font=dict(family="IPAexGothic, Noto Sans CJK JP, sans-serif", size=12),
         plot_bgcolor="white",
         paper_bgcolor="white",
-        width=1080,
-        height=610,
+        # width=1080,
+        # height=610,
         legend=dict(
             orientation="v",
             yanchor="top",
