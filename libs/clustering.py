@@ -5,7 +5,6 @@ import numpy as np
 from janome.tokenizer import Tokenizer
 from umap import UMAP
 from hdbscan import HDBSCAN
-from sklearn.cluster import SpectralClustering
 from sklearn.feature_extraction.text import CountVectorizer
 from bertopic import BERTopic
 
@@ -64,13 +63,13 @@ def _perform_clustering(
     documents: list[str],
     embeddings: np.ndarray,
     metadata_dict: dict,
-    min_cluster_size: int = 2,
+    min_cluster_size: int = 10,
     n_components: int = 2,
     num_topics: int = 6,
 ) -> pd.DataFrame:
     """
-    与えられたドキュメントと埋め込みを使用して、UMAP、HDBSCAN、BERTopic、Spectral Clusteringを組み合わせた
-    クラスタリングを実行します。
+    与えられたドキュメントと埋め込みを使用して、UMAP、HDBSCAN、BERTopicを組み合わせた
+    クラスタリングを実行します。クラスター数はユーザーが設定した固定値を使用します。
 
     Args:
         documents (list[str]): クラスタリング対象のドキュメントのリスト。
@@ -79,7 +78,7 @@ def _perform_clustering(
                               結果DataFrameに結合されます。
         min_cluster_size (int, optional): HDBSCANの最小クラスターサイズ。デフォルトは2。
         n_components (int, optional): UMAPの次元削減後の次元数。デフォルトは2。
-        num_topics (int, optional): Spectral Clusteringで生成するトピック（クラスター）の数。デフォルトは6。
+        num_topics (int, optional): BERTopicで生成するトピック（クラスター）の数。デフォルトは6。
 
     Returns:
         pd.DataFrame: クラスタリング結果を含むDataFrame。
@@ -96,72 +95,54 @@ def _perform_clustering(
         umap_model = UMAP(
             random_state=42,
             n_components=n_components,
-            n_jobs=-1,  # 並列処理を有効化
+            n_jobs=-1,
         )
 
         # HDBSCANクラスタリングモデルの初期化
         logger.info("Initializing HDBSCAN clustering model")
         hdbscan_model = HDBSCAN(
             min_cluster_size=min_cluster_size,
-            min_samples=1,  # より小さいクラスターを許容
-            core_dist_n_jobs=-1,  # 並列処理を有効化
+            min_samples=1,
+            core_dist_n_jobs=-1,
         )
 
         # CountVectorizerのセットアップ
         logger.info("Setting up CountVectorizer")
         vectorizer_model = CountVectorizer(tokenizer=_tokenize_japanese)
 
-        # BERTopicモデルの初期化
-        logger.info("Initializing BERTopic model")
+        # BERTopicモデルの初期化とクラスタ数の固定
+        logger.info(f"Initializing BERTopic model with nr_topics={num_topics}")
         topic_model = BERTopic(
             umap_model=umap_model,
             hdbscan_model=hdbscan_model,
             vectorizer_model=vectorizer_model,
             verbose=True,
+            nr_topics=num_topics,
         )
 
-        # BERTopicモデルのフィット
-        logger.info("Fitting BERTopic model")
-        # BERTopicのfit_transformはトピックとトピック強度を返すため、ここでは使用しない
-        topic_model.fit_transform(documents, embeddings=embeddings)
+        # BERTopicモデルのフィットとトピック割り当ての取得
+        logger.info("Fitting BERTopic model and getting topics")
+        topics, probs = topic_model.fit_transform(documents, embeddings=embeddings)
 
-        # Spectral Clusteringの実行
-        logger.info("Performing Spectral Clustering")
-        n_samples = len(embeddings)
-        # n_neighborsはサンプル数-1を超えないようにする
-        n_neighbors = min(n_samples - 1, 10)
-        spectral_model = SpectralClustering(
-            n_clusters=num_topics,
-            affinity="nearest_neighbors",
-            n_neighbors=n_neighbors,
-            random_state=42,
-            n_jobs=-1,  # 並列処理を有効化
-        )
-
-        # UMAP変換とSpectral Clusteringによる予測
-        logger.info("Performing UMAP transformation")
-        umap_embeddings = umap_model.fit_transform(embeddings)
-        logger.info("Predicting clusters")
-        cluster_labels = spectral_model.fit_predict(umap_embeddings)
+        # UMAP座標を取得
+        logger.info("Getting UMAP coordinates")
+        umap_embeddings = topic_model.umap_model.transform(embeddings)
 
         # 結果DataFrameの生成
-        logger.info("Generating document info")
-        result_df = topic_model.get_document_info(
-            docs=documents,
-            metadata={
-                **metadata_dict,
+        logger.info("Generating result DataFrame")
+        result_df = pd.DataFrame(
+            {
+                "index": metadata_dict["index"],
+                "cid": metadata_dict["cid"],
                 "x": umap_embeddings[:, 0],
                 "y": umap_embeddings[:, 1],
-            },
+                "probability": probs,
+                "cluster-id": topics,
+            }
         )
 
-        # カラム名の調整と選択
-        result_df.columns = [col.lower() for col in result_df.columns]
-        result_df = result_df[["index", "x", "y", "probability"]]
-        result_df["cluster-id"] = cluster_labels
-
         logger.info(
-            f"Clustering completed successfully with {len(set(cluster_labels))} clusters"
+            f"Clustering completed successfully with {len(set(result_df['cluster-id']))} clusters"
         )
         return result_df
 
@@ -207,7 +188,7 @@ def clustering(config: dict, idf: pd.DataFrame, edf: pd.DataFrame) -> pd.DataFra
                 "index": idf["index"].values,
                 "cid": idf["cid"].values,
             },
-            min_cluster_size=num_clusters,
+            min_cluster_size=10,
             num_topics=num_clusters,
         )
         logger.info("Clustering pipeline completed successfully")
