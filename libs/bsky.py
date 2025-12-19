@@ -2,11 +2,9 @@ import logging
 from time import sleep
 from typing import Any
 
-
 from atproto import Client
 from pandas import DataFrame
 from retry import retry
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,9 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor
+
 import pandas as pd
-
-
 from langchain.prompts import ChatPromptTemplate
-from langchain_xai import ChatXAI
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field, SecretStr
 from tqdm import tqdm
 
@@ -15,11 +15,11 @@ class TopicData(BaseModel):
     )
 
 
-def _get_topics(config: dict, api_key: str, post: str):
-    llm = ChatXAI(
+def _get_topics(args):
+    config, api_key, post = args
+    llm = ChatOpenAI(
         model=config["preproc"]["model"],
         api_key=SecretStr(api_key),
-        temperature=0.0,
     )
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -34,17 +34,29 @@ def _get_topics(config: dict, api_key: str, post: str):
         ]
     )
     chain = prompt | llm.with_structured_output(TopicData)
-    res: TopicData = chain.invoke({})  # type: ignore
-    return res.topics
+    try:
+        res: TopicData = chain.invoke({})  # type: ignore
+        return res.topics
+    except Exception as e:
+        logging.error(f"Error processing post: {e}")
+        return []
 
 
-def preproc(config: dict, api_key: str, idf: pd.DataFrame):
+def preproc(config: dict, api_key: str, idf: pd.DataFrame, max_workers: int = 4):
     logging.basicConfig(level=logging.WARNING)
+    idf = idf.dropna(subset=["text"])
+    records = idf.to_dict("records")
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Prepare arguments for each task
+        args = [(config, api_key, rec["text"]) for rec in records]
+
+        # Use tqdm to monitor progress
+        results = list(tqdm(executor.map(_get_topics, args), total=len(records)))
+
     data = []
     index = 0
-    idf = idf.dropna(subset=["text"])
-    for rec in tqdm(idf.to_dict("records")):
-        topics = _get_topics(config, api_key, rec["text"])
+    for rec, topics in zip(records, results):
         for topic in topics:
             data.append(
                 {
@@ -54,4 +66,5 @@ def preproc(config: dict, api_key: str, idf: pd.DataFrame):
                 }
             )
             index += 1
+
     return pd.DataFrame(data)

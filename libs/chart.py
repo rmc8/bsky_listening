@@ -1,7 +1,8 @@
 from typing import Literal
-import plotly.express as px
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+import plotly.express as px
 
 
 def _create_scatter_plot(

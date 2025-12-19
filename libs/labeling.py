@@ -1,10 +1,8 @@
 import random
 
 import pandas as pd
-
-
 from langchain.prompts import ChatPromptTemplate
-from langchain_xai import ChatXAI
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field, SecretStr
 from tqdm import tqdm
 
@@ -14,10 +12,9 @@ class LabelData(BaseModel):
 
 
 def _get_label(config: dict, api_key: str, topics: list[str]) -> str:
-    llm = ChatXAI(
+    llm = ChatOpenAI(
         model=config["labeling"]["model"],
         api_key=SecretStr(api_key),
-        temperature=0.0,
     )
     topic_data = "\n".join(topics).replace("{", "{{").replace("}", "}}")
     prompt = ChatPromptTemplate.from_messages(

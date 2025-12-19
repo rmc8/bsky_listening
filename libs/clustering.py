@@ -1,12 +1,12 @@
 import logging
 
-import pandas as pd
 import numpy as np
-from janome.tokenizer import Tokenizer
-from umap import UMAP
-from hdbscan import HDBSCAN
-from sklearn.feature_extraction.text import CountVectorizer
+import pandas as pd
 from bertopic import BERTopic
+from hdbscan import HDBSCAN
+from janome.tokenizer import Tokenizer
+from sklearn.feature_extraction.text import CountVectorizer
+from umap import UMAP
 
 logging.basicConfig(
     level=logging.INFO,

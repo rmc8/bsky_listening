@@ -8,8 +8,7 @@ import fire
 import pandas as pd
 from dotenv import load_dotenv
 
-
-from libs import bsky, chart, preproc, embedding, clustering, labeling
+from libs import bsky, chart, clustering, embedding, labeling, preproc
 from libs.file_name import FileName
 
 load_dotenv()
@@ -65,7 +64,7 @@ class BskyListening:
         idf = pd.read_csv(input_path, sep="\t")
         odf = preproc.preproc(
             config=get_config(),
-            api_key=str(os.getenv("XAI_API_KEY")),
+            api_key=str(os.getenv("OPENAI_API_KEY")),
             idf=idf,
         )
         output_path = io_dir.joinpath(FileName.preproc.value)
@@ -165,7 +164,7 @@ class BskyListening:
         idf = pd.merge(pdf, cdf, on=["index"], how="left")
         odf = labeling.labeling(
             config=get_config(),
-            api_key=str(os.getenv("XAI_API_KEY")),
+            api_key=str(os.getenv("OPENAI_API_KEY")),
             idf=idf,
             threshold=threshold,
         )
